@@ -44,13 +44,18 @@ class DataSourceGenerator
 
         $ds = new DataSource();
         // Create columns
-        foreach ($columns as $id => $type) {
-            $ds->cols[] = static::createColumn(['type' => $type, 'id' => $id]);
+        foreach ($columns as $id => $column) {
+            if (is_array($column)) {
+                $column['id'] = $id;
+                $ds->cols[]   = static::createColumn($column);
+            } else {
+                $ds->cols[] = static::createColumn(['type' => $column, 'id' => $id]);
+            }
         }
         // Create rows
         foreach ($objects as $object) {
             $row = new \stdClass();
-            $row->c = static::createCells($object, $columns);
+            $row->c = static::createCells($object, $ds->cols);
             $ds->rows[] = $row;
         }
 
@@ -91,26 +96,38 @@ class DataSourceGenerator
         // Iterate over columns array for correct order
         // Use key to extract value from object and create new cell
         $objectArr = (array)$object;
-        foreach ($columns as $key => $type) {
+        foreach ($columns as $column) {
             $cell = new \stdClass();
-            switch ($type) {
+
+            if (!isset($objectArr[$column->id])) {
+                $cell->v = $column->type == 'number' ? 0 : null;
+                $cells[] = $cell;
+                continue;
+            }
+
+            $value = $objectArr[$column->id];
+
+            switch ($column->type) {
                 case 'number':
-                    if (is_numeric($objectArr[$key]) || is_null($objectArr[$key])) {
-                        $cell->v = $objectArr[$key] + 0;
-                    } else {
+                    if (!is_numeric($value)) {
                         throw new \InvalidArgumentException("A field that was supposed to be interpreted as a number is not numeric");
                     }
+                    $cell->v = $value + 0;
                     break;
+
                 case 'datetime':
                 case 'date':
-                    if (is_null($objectArr[$key]) || strcasecmp($objectArr[$key], "null") === 0) {
+                    if ($value instanceof \DateTime) {
+                        $cell->v = $value;
+                    } elseif (strcasecmp($value, "null") === 0) {
                         $cell->v = null;
                     } else {
-                        $cell->v = new \DateTime($objectArr[$key]);
+                        $cell->v = new \DateTime($value);
                     }
                     break;
+
                 default:
-                    $cell->v = $objectArr[$key];
+                    $cell->v = $value;
                     break;
             }
             $cells[] = $cell;

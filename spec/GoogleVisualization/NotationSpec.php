@@ -36,22 +36,10 @@ class NotationSpec extends ObjectBehavior
         $this->encode(true)->shouldBeLike('true');
     }
 
-    function it_encodes_kv_keys_without_quotes()
-    {
-        $this->encode(json_decode('{"foo":"bar"}'))->shouldBeString();
-        $this->encode(json_decode('{"foo":"bar"}'))->shouldBeLike('{foo: "bar"}');
-    }
-
     function it_encodes_arrays_like_json()
     {
         $this->encode(['one', 2, true])->shouldBeString();
         $this->encode(['one', 2, true])->shouldBeLike('["one", 2, true]');
-    }
-
-    function it_encodes_associative_arrays_as_objects()
-    {
-        $this->encode(['foo' => 'bar', 'bar' => 'baz'])->shouldBeString();
-        $this->encode(['foo' => 'bar', 'bar' => 'baz'])->shouldBeLike('{foo: "bar", bar: "baz"}');
     }
 
     function it_encodes_datetime_as_new_js_date_object()

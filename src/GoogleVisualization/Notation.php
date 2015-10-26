@@ -32,7 +32,6 @@ class Notation
                 break;
             case 'object':
                 if (is_a($content, '\DateTime')) {
-
                     $result = 'new Date('
                         . $content->format('Y, ')
                         . ($content->format('n') - 1)
@@ -43,7 +42,7 @@ class Notation
                 } else {
                     $elements = [];
                     foreach (get_object_vars($content) as $key => $value) {
-                        $elements[] = $key . ': ' . static::encode($value);
+                        $elements[] = '"' . $key . '": ' . static::encode($value);
                     }
                     $result = '{' . implode(', ', $elements) . '}';
                     unset($elements);
